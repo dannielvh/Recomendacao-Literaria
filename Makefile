@@ -1,22 +1,69 @@
-PYTHON := python3
-SRC_FILE := 01_preprocess_data.py
-OUTPUT_FILE := goodreads_graph_base_clean.csv
+# --- CONFIGURAÇÕES DO AMBIENTE ---
+VENV_DIR := .venv
+PYTHON := $(VENV_DIR)/bin/python3
+PIP := $(VENV_DIR)/bin/pip
+SYSTEM_PYTHON := python3
+
+# --- DIRETÓRIOS ---
+SRC_DIR := src
+OUT_DIR := csv
+
+# --- ARQUIVOS ---
+SCRIPT_INTERFACE := $(SRC_DIR)/interface_usuario.py
+SCRIPT_SETUP := $(SRC_DIR)/setup_env.py
+
+# Outputs esperados (para limpeza)
+OUTPUT_CLEAN_DATA := $(OUT_DIR)/goodreads_graph_base_clean.csv
+OUTPUT_EDGES := $(OUT_DIR)/goodreads_graph_edges.csv
+OUTPUT_USER := $(OUT_DIR)/usuario_subgrafo.csv
 BUILD_DIR := ./build
 
-.PHONY: all run clean build
-all: build run
-build:
-	@mkdir -p $(BUILD_DIR)
-run: $(SRC_FILE)
-	@echo "--- Rodando o script de Pré-processamento Python ---"
-	$(PYTHON) $(SRC_FILE)
-	@echo "--- Pré-processamento concluído. Base salva em: $(OUTPUT_FILE) ---"
+# Metas
+.PHONY: all run clean clean_relatorio install help setup_dirs
 
-clean:
-	@echo "Limpando arquivos gerados..."
-	-@rm -vf $(OUTPUT_FILE)
-	-@rmdir $(BUILD_DIR) 2>/dev/null || true
+# Meta padrão (ao digitar 'make')
+all: install setup_dirs run
 
-install:
-	@echo "Instalando dependências (pandas e numpy)..."
-	pip install pandas numpy
+# 1. Cria a pasta de saída (csv/) se não existir
+setup_dirs:
+	@mkdir -p $(OUT_DIR)
+
+# 2. Cria o ambiente virtual (Sem pip inicialmente para evitar erros do Ubuntu)
+$(VENV_DIR):
+	@echo "🔧 [Config] A criar ambiente virtual Python..."
+	@$(SYSTEM_PYTHON) -m venv $(VENV_DIR) --without-pip
+
+# 3. Instala dependências (Chama o nosso script Python para resolver o pip)
+install: $(VENV_DIR)
+	@echo "⬇️  [Install] A configurar pip e dependências..."
+	@# Roda o script de setup USANDO O PYTHON DO AMBIENTE VIRTUAL
+	@$(PYTHON) $(SCRIPT_SETUP)
+	@# Agora instala as libs
+	@$(PIP) install pandas numpy > /dev/null 2>&1
+	@echo "✅ Ambiente pronto."
+
+# 4. Execução: Roda a Interface
+run: install setup_dirs
+	@echo "\n🚀 [Start] A iniciar Interface do Utilizador..."
+	@# O PYTHONPATH garante que o Python encontre os módulos na pasta src
+	@PYTHONPATH=$(SRC_DIR) $(PYTHON) $(SCRIPT_INTERFACE)
+
+# Limpeza Geral
+clean: clean_relatorio
+	@echo "🧹 A limpar ficheiros e caches..."
+	-@rm -vf $(OUTPUT_CLEAN_DATA) $(OUTPUT_EDGES) $(OUTPUT_USER)
+	-@rm -rf $(BUILD_DIR) __pycache__ *.pyc */__pycache__ $(SRC_DIR)/__pycache__
+	-@rm -rf $(VENV_DIR)
+	-@rmdir $(OUT_DIR) 2>/dev/null || true
+	@echo "Limpeza concluída."
+
+# Limpeza Específica de Relatórios (.dat)
+clean_relatorio:
+	@echo "📄 A remover relatórios .dat..."
+	-@rm -vf *.dat
+
+help:
+	@echo "Comandos disponíveis:"
+	@echo "  make              : Instala tudo e abre o programa."
+	@echo "  make clean        : Apaga TUDO (incluindo venv e csv)."
+	@echo "  make clean_relatorio : Apaga apenas os relatórios de texto."
