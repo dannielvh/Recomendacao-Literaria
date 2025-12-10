@@ -3,7 +3,7 @@ import numpy as np
 import re
 import os
 
-INPUT_FILE = 'goodreads_books.csv'
+INPUT_FILE = 'GoodReads_100k_books.csv'
 OUTPUT_FILE = 'csv/goodreads_graph_base_clean.csv'
 
 MIN_RATING_COUNT = 1000       

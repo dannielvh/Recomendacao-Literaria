@@ -30,7 +30,7 @@ setup_dirs:
 
 # 2. Cria o ambiente virtual (Sem pip inicialmente para evitar erros do Ubuntu)
 $(VENV_DIR):
-	@echo "🔧 [Config] A criar ambiente virtual Python..."
+	@echo "[Config] A criar ambiente virtual Python..."
 	@$(SYSTEM_PYTHON) -m venv $(VENV_DIR) --without-pip
 
 # 3. Instala dependências (Chama o nosso script Python para resolver o pip)
@@ -44,18 +44,19 @@ install: $(VENV_DIR)
 
 # 4. Execução: Roda a Interface
 run: install setup_dirs
-	@echo "\n🚀 [Start] A iniciar Interface do Utilizador..."
+	@echo "\n A iniciar Interface do Utilizador..."
 	@# O PYTHONPATH garante que o Python encontre os módulos na pasta src
 	@PYTHONPATH=$(SRC_DIR) $(PYTHON) $(SCRIPT_INTERFACE)
 
 # Limpeza Geral
-clean: clean_relatorio
-	@echo "🧹 A limpar ficheiros e caches..."
+# --- LIMPEZA GERAL (NÃO APAGA RELATÓRIOS) ---
+clean:
+	@echo "A limpar ambiente, caches e dados brutos..."
 	-@rm -vf $(OUTPUT_CLEAN_DATA) $(OUTPUT_EDGES) $(OUTPUT_USER)
 	-@rm -rf $(BUILD_DIR) __pycache__ *.pyc */__pycache__ $(SRC_DIR)/__pycache__
 	-@rm -rf $(VENV_DIR)
 	-@rmdir $(OUT_DIR) 2>/dev/null || true
-	@echo "Limpeza concluída."
+	@echo "Limpeza de sistema concluída (Relatórios .dat mantidos)."
 
 # Limpeza Específica de Relatórios (.dat)
 clean_relatorio:
@@ -65,5 +66,5 @@ clean_relatorio:
 help:
 	@echo "Comandos disponíveis:"
 	@echo "  make              : Instala tudo e abre o programa."
-	@echo "  make clean        : Apaga TUDO (incluindo venv e csv)."
+	@echo "  make clean        : Apaga venv e csv."
 	@echo "  make clean_relatorio : Apaga apenas os relatórios de texto."
